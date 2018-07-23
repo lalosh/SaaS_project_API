@@ -1,5 +1,7 @@
 const express = require('express');
 const fs = require('fs');
+const bodyParser = require('body-parser')
+
 const generateFiles = require('./generateFiles');
 const registerLogic = require('./registerLogic');
 
@@ -16,6 +18,11 @@ app.set('view engine', 'hbs');
 
 //serve static scripts and assets
 app.use(express.static(__dirname + '/public'));
+
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 
 //save server log
 app.use((request, response, next) => {
@@ -68,27 +75,45 @@ app.get('/login', (request, response) => {
 })
 
 app.get('/dashboard', (request, response) => {
-    response.render('dashboard.hbs');
+    response.render('dashboard.hbs',{
+        username: request.query.username
+    });
 })
 
 app.get('/flot', (request, response) => {
-    response.render('flot.hbs');
+    response.render('flot.hbs',{
+        username: request.query.username
+    });
 })
 
 app.get('/content', (request, response) => {
-    response.render('content.hbs');
+    response.render('content.hbs',{
+        username: request.query.username
+    });
 })
 
 app.get('/panels-wells', (request, response) => {
-    response.render('panels-wells.hbs');
+    response.render('panels-wells.hbs',{
+        username: request.query.username
+    });
 })
 
 app.get('/tables', (request, response) => {
-    response.render('tables.hbs');
+    response.render('tables.hbs',{
+        username: request.query.username
+    });
 })
 
 app.get('/forms', (request, response) => {
-    response.render('tables.hbs');
+    response.render('tables.hbs',{
+        username: request.query.username
+    });
+})
+
+app.post('/createnamespace',(request, response) => {
+    console.log(request.body);
+
+    response.send({result:'Name space create successfully'});
 })
 
 //Route not available

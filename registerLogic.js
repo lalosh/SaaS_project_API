@@ -56,7 +56,8 @@ function registerLogic(){
 
         let usersArray = restore();
         let filterdArray = usersArray.filter( user => user['email'] === inputEmail);
-       
+            filterdArray = filterdArray.filter( user => user['username'] === inputUsername );
+        
         if(filterdArray.length == 0){
             usersArray.push({username: inputUsername, password: inputPassword,email: inputEmail, namespaces: []});
             save(usersArray);
@@ -111,11 +112,32 @@ function registerLogic(){
         return undefined;
     }
 
+    function getEmail(username){
+        let usersArray = restore();
+        let filterdArray = usersArray.filter(user => user['username'] === username);
+        
+        if(filterdArray.length == 1)
+            return filterdArray[0]['email'];
+        
+        return undefined;       
+    }
+    
+    function getNamepace(email){
+        let usersArray = restore();
+        let filterdArray = usersArray.filter(user => user['email'] === email);
+        
+        if(filterdArray.length == 1)
+            return filterdArray[0]['namespaces'];
+        
+        return undefined;       
+    }
+
     return {
         signin,
         signup,
         addNamespace,
-        getUsername
+        getUsername,
+        getEmail
     }
 }
 

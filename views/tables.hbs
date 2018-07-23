@@ -51,7 +51,8 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.html">SB Admin v2.0</a>
+                <a class="navbar-brand" href="/dashboard?username={{username}}" id="usernameid">{{username}}</a>
+                
             </div>
             <!-- /.navbar-header -->
 
@@ -201,19 +202,19 @@
                             <!-- /input-group -->
                         </li>
                         <li>
-                            <a href="/dashboard"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+                            <a href="/dashboard?username={{username}}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                         </li>
                         <li>
-                            <a href="/flot"><i class="fa fa-bar-chart-o fa-fw"></i> Status Service</a>
+                            <a href="/flot?username={{username}}"><i class="fa fa-bar-chart-o fa-fw"></i> Status Service</a>
                         </li>
                         <li>
-                            <a href="/tables"><i class="fa fa-table fa-fw"></i> View Pods</a>
+                            <a href="/tables?username={{username}}"><i class="fa fa-table fa-fw"></i> View Pods</a>
                         </li>
                         <li>
-                            <a href="/forms"><i class="fa fa-edit fa-fw"></i> Edit Service</a>
+                            <a href="/forms?username={{username}}"><i class="fa fa-edit fa-fw"></i> Edit Service</a>
                         </li>
                         <li>
-                            <a href="/content"><i class="fa fa-envelope-o  fa-fw"></i> Contect Us</a>
+                            <a href="/content?username={{username}}"><i class="fa fa-envelope-o  fa-fw"></i> Contect Us</a>
                         </li>
                         </li>
                     </ul>
