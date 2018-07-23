@@ -31,63 +31,111 @@ function k8sAPI(IP,PORT){
             return false;
         }
 
-        function successPromise(data){
-            console.log('Success! creating...');
-            successCount++;
-            if(successCount == 9){
-                console.log('Finish creating Files');
-                console.log('your namespace is ready');
-                return true;
+
+
+            function successPromise(data){
+                console.log('Success! creating...');
+                successCount++;
+                if(successCount == 9){
+                    console.log('Finish creating Files');
+                    console.log('your namespace is ready');
+                    return new Promise(function(resolve,reject){
+                        resolve(true);
+                    })
+                }
             }
-        }
-        
-        function failerPromise(error){
-            console.log('Failed!... maybe the namespace is already created');
-            console.log('Error:');
-            console.error(error);
-            console.log('-------------------');
-        }
-        
-        generateFiles(namespace);
-        let basePath = `${__dirname}/namespaces/${namespace}/`;
+            
+            function failerPromise(error){
+                console.log('Failed!... maybe the namespace is already created');
+                console.log('Error:');
+                console.error(error);
+                console.log('-------------------');
+            }
+            
+            generateFiles(namespace);
+            let basePath = `${__dirname}/namespaces/${namespace}/`;
+    
 
-        //creat new namespace
-        kubectl
-        .command(`create namespace ${namespace}`)
-        .then(successPromise, failerPromise);
-        
-        kubectl
-        .command(`create -f ${basePath}001-local-volumes.yaml`)
-        .then(successPromise, failerPromise);
+            ///
 
-        kubectl
-        .command(`create -f ${basePath}002-mysql-credentials.yaml`)
-        .then(successPromise, failerPromise);
 
-        kubectl
-        .command(`create -f ${basePath}003-mysql/001-mysql-volume.yaml`)
-        .then(successPromise, failerPromise);
-        
-        kubectl
-        .command(`create -f ${basePath}003-mysql/002-mysql-deployment.yaml`)
-        .then(successPromise, failerPromise);
+            let order = function(){ 
+            
+                return new Promise(function(resolve, reject){
+                    console.log(0);
+                    resolve(true);
+                })
+            }
 
-        kubectl
-        .command(`create -f ${basePath}003-mysql/003-mysql-service.yaml`)
-        .then(successPromise, failerPromise);
+            return order()
+            .then(()=>{
+                console.log('hello1')
+                return kubectl
+                .command(`create namespace ${namespace}`)
+                .then(successPromise, failerPromise);
+            })
 
-        kubectl
-        .command(`create -f ${basePath}004-wordpress/001-wordpress-volume.yaml`)
-        .then(successPromise, failerPromise);
+            .then(()=>{
+                return kubectl
+                .command(`create -f ${basePath}002-mysql-credentials.yaml`)
+                .then(successPromise, failerPromise);
+            })
 
-        kubectl
-        .command(`create -f ${basePath}004-wordpress/002-wordpress-deployment.yaml`)
-        .then(successPromise, failerPromise);
+            .then(()=>{
+                return kubectl
+                .command(`create -f ${basePath}003-mysql/001-mysql-volume.yaml`)
+                .then(successPromise, failerPromise);
+            })
 
-        kubectl
-        .command(`create -f ${basePath}004-wordpress/003-wordpress-service.yaml`)
-        .then(successPromise, failerPromise);    
-        
+            .then(()=>{
+                return kubectl
+                .command(`create -f ${basePath}003-mysql/002-mysql-deployment.yaml`)
+                .then(successPromise, failerPromise);
+            })
+
+            .then(()=>{
+                return kubectl
+                .command(`create -f ${basePath}003-mysql/003-mysql-service.yaml`)
+                .then(successPromise, failerPromise);
+            })
+
+            .then(()=>{
+                return kubectl
+                .command(`create -f ${basePath}004-wordpress/001-wordpress-volume.yaml`)
+                .then(successPromise, failerPromise);
+            })
+    
+            .then(()=>{
+                return kubectl
+                .command(`create -f ${basePath}004-wordpress/002-wordpress-deployment.yaml`)
+                .then(successPromise, failerPromise);
+            })
+
+            .then(()=>{
+                return kubectl
+                .command(`create -f ${basePath}004-wordpress/003-wordpress-service.yaml`)
+                .then(successPromise, failerPromise)
+            })
+              
+            .then(()=>{   
+                 return kubectl
+                .command(`apply --record -f ${basePath}podinfo-hpa.yaml`)
+                .then(successPromise, failerPromise);
+            })
+
+            .then(()=>{   
+                return kubectl
+               .command(`create -f ${basePath}005-phpmyadmin/001-phpmyadmin-deployment.yaml`)
+               .then(successPromise, failerPromise);
+           })
+
+            .then(()=>{   
+                 return kubectl
+                .command(`create -f ${basePath}005-phpmyadmin/002-phpmyadmin-service.yaml`)
+                .then(successPromise, failerPromise);
+            })
+            .then(successPromise, failerPromise);
+                    
     }
 
 
@@ -110,8 +158,12 @@ function k8sAPI(IP,PORT){
     
                 //return the Service ip for the user
                 let userIP = IP;
-                let userPort = serviceInfo.items[1].spec.ports[0].nodePort;
-                resolve(`http://${userIP}:${userPort}`);
+                let userIPForPhpmyadmin = `http://${userIP}:${serviceInfo.items[1].spec.ports[0].nodePort}`;
+                let userIPForWordpress = `http://${userIP}:${serviceInfo.items[2].spec.ports[0].nodePort}`;
+                resolve({ 
+                    userIPForPhpmyadmin,
+                    userIPForWordpress
+                });
             });
         })
     }
@@ -135,10 +187,12 @@ function k8sAPI(IP,PORT){
     
                 //return the service name
                 console.log(`mysql service name:     ${serviceInfo.items[0].metadata.name}`)
-                console.log(`wordpress service name: ${serviceInfo.items[1].metadata.name}`)
+                console.log(`php service name: ${serviceInfo.items[1].metadata.name}`)
+                console.log(`wordpress service name: ${serviceInfo.items[2].metadata.name}`)
                 resolve({
                     mysqlService: `${serviceInfo.items[0].metadata.name}`,
-                    wordpressService: `${serviceInfo.items[1].metadata.name}`
+                    phpService: `${serviceInfo.items[1].metadata.name}`,
+                    wordpressService: `${serviceInfo.items[2].metadata.name}`
                 })
             });
         })
@@ -197,7 +251,7 @@ function k8sAPI(IP,PORT){
             binary: '/usr/local/bin/kubectl'
         });
 
-        userKubectl
+        return userKubectl
         .command('get hpa')
         .then(function(data){
 

@@ -5,6 +5,10 @@ const bodyParser = require('body-parser')
 const generateFiles = require('./generateFiles');
 const registerLogic = require('./registerLogic');
 
+const k8sAPI = require('./k8sAPI');
+let API = k8sAPI('192.168.42.22','8443');
+
+
 let app = express();
 let appRegisterLogic = registerLogic();
 
@@ -81,9 +85,19 @@ app.get('/dashboard', (request, response) => {
 })
 
 app.get('/flot', (request, response) => {
-    response.render('flot.hbs',{
-        username: request.query.username
-    });
+
+    let namespace = appRegisterLogic.getNamepace(request.query.username);
+    API.getAutoscalerInfo(namespace)
+    .then((res) => {
+
+        response.render('flot.hbs',{
+            username: request.query.username,
+            autoScalerInfo: JSON.stringify(res, undefined, 2)
+        });
+    })
+    .catch((e)=> console.log(e))
+
+
 })
 
 app.get('/content', (request, response) => {
@@ -99,21 +113,60 @@ app.get('/panels-wells', (request, response) => {
 })
 
 app.get('/tables', (request, response) => {
-    response.render('tables.hbs',{
-        username: request.query.username
-    });
+
+    let namespace = appRegisterLogic.getNamepace(request.query.username);
+    API.getContainerInfo(namespace)
+    .then((res) => {
+
+        response.render('tables.hbs',{
+            username: request.query.username,
+            containerInfo: JSON.stringify(res, undefined, 2)
+        });
+
+    })
+    .catch((e)=> console.log(e))
+
 })
 
 app.get('/forms', (request, response) => {
-    response.render('tables.hbs',{
-        username: request.query.username
-    });
+
+    let namespace = appRegisterLogic.getNamepace(request.query.username);
+
+    API.getServiceNames(namespace)
+    .then((res) => {
+      
+        API.getUserIP(namespace)
+        .then((res2) => {
+
+            response.render('forms.hbs',{
+                username: request.query.username,
+                serviceInfo: JSON.stringify(res,undefined,2),
+                userIPForWordpress: res2.userIPForWordpress,
+                userIPForPhpmyadmin: res2.userIPForPhpmyadmin,
+            });
+
+        })
+    })
+    .catch((e)=> console.log(e))
+
 })
 
 app.post('/createnamespace',(request, response) => {
     console.log(request.body);
 
-    response.send({result:'Name space create successfully'});
+    let email = appRegisterLogic.getEmail(request.body.username);
+    appRegisterLogic.addNamespace(email, request.body.domainName);
+
+
+    // API.createNamespace(request.body.domainName)
+    // .then((res) => {
+    //     console.log(res);
+        response.send({result:'Name space create successfully'});
+    // })
+    // .catch((e)=>{
+    //     console.error(e);
+    // })
+
 })
 
 //Route not available

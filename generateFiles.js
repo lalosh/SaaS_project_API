@@ -79,7 +79,7 @@ let _podinfo_hpa_yaml=
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: wordpress
+  name: wordpress-${namespace}
   namespace: ${namespace}
   labels:
     app: wordpress
@@ -89,7 +89,7 @@ spec:
   scaleTargetRef:
     apiVersion: extensions/v1beta1
     kind: Deployment
-    name: wordpress
+    name: wordpress-${namespace}
   minReplicas: ${minReplicas}
   maxReplicas: ${maxReplicas}
   metrics:
@@ -149,13 +149,6 @@ spec:
             secretKeyRef:
               name: mysql-credentials
               key: password
-        resources:
-          requests:
-            memory: ${deployment_request_memory_sql}
-            cpu: ${deployment_request_cpu_sql}
-          limits:
-            memory: ${deployment_limit_memory_sql}
-            cpu: ${deployment_limit_cpu_sql}
         ports:
         - containerPort: ${containerPort}
         volumeMounts:
@@ -236,13 +229,6 @@ spec:
             secretKeyRef:
               name: mysql-credentials
               key: password
-        resources:
-          requests:  
-            memory: ${deployment_request_memory_wordpress}
-            cpu: ${deployment_request_cpu_wordpress}
-          limits:
-            memory: ${deployment_limit_memory_wordpress}
-            cpu: ${deployment_limit_cpu_wordpress}
         ports:
         - containerPort: 80
         volumeMounts:
@@ -275,6 +261,62 @@ spec:
     - protocol: TCP
       targetPort: 80
       port: 80
+`;
+
+let _001_phpmyadmin_deployment_yaml =
+`
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: phpmyadmin-${namespace}
+  namespace: ${namespace}
+  labels:
+    app: phpmyadmin
+    tier: frontend
+    env: development
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+        tier: frontend
+        env: development
+    spec:
+      containers:
+      - name: phpmyadmin-${namespace}
+        image: phpmyadmin/phpmyadmin:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PMA_HOST
+          value: mysql
+        ports:
+        - containerPort: 81
+`;
+
+let _002_phpmyadmin_service_yaml = 
+`
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-${namespace}
+  namespace: ${namespace}
+  labels:
+    app: phpmyadmin
+    tier: frontend
+    env: development
+spec:
+  selector:
+    app: phpmyadmin
+    tier: frontend
+    env: development
+  ports:
+    - protocol: TCP
+      targetPort: 81
+      port: 81
+  type: LoadBalancer
 `;
 ////////////////
 //current directory
@@ -323,6 +365,16 @@ fs.writeFileSync('./'+dir+'/002-wordpress-deployment.yaml',_002_wordpress_deploy
     
 fs.writeFileSync('./'+dir+'/003-wordpress-service.yaml',_003_wordpress_service_yaml);
 
+//
+dir = './namespaces/'+namespace+'/005-phpmyadmin';
+
+if (!fs.existsSync(dir))
+    fs.mkdirSync(dir);
+
+fs.writeFileSync('./'+dir+'/001-phpmyadmin-deployment.yaml',_001_phpmyadmin_deployment_yaml);
+    
+fs.writeFileSync('./'+dir+'/002-phpmyadmin-service.yaml',_002_phpmyadmin_service_yaml);
+    
 
 
 

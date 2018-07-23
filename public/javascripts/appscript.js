@@ -5,7 +5,7 @@ createDomain.onclick = function(){
 
     let data = {};
     data.domainName = $('#domainName').val();
-    data.username = $('#usernameid')[0].text;
+    data.username = document.getElementById('usernameid').text;
 
     console.log(data);
 

@@ -122,9 +122,9 @@ function registerLogic(){
         return undefined;       
     }
     
-    function getNamepace(email){
+    function getNamepace(username){
         let usersArray = restore();
-        let filterdArray = usersArray.filter(user => user['email'] === email);
+        let filterdArray = usersArray.filter(user => user['username'] === username);
         
         if(filterdArray.length == 1)
             return filterdArray[0]['namespaces'];
@@ -137,7 +137,8 @@ function registerLogic(){
         signup,
         addNamespace,
         getUsername,
-        getEmail
+        getEmail,
+        getNamepace
     }
 }
 
